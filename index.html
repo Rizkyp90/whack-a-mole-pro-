@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Whack-a-Mole Pro</title>
+    <title>Mole Mania!</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -271,6 +271,55 @@
             margin-bottom: 30px;
         }
 
+        /* Rules button and overlay */
+        #rules-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            z-index: 11; /* Above opening screen */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease;
+        }
+        #rules-btn:hover {
+            transform: scale(1.1);
+        }
+        #rules-btn:active {
+            transform: scale(1);
+        }
+
+        #rules-overlay {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            overflow-y: auto; /* Allow scrolling for long rules */
+        }
+        #rules-overlay h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        #rules-overlay ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            text-align: left;
+            font-size: 1.2rem;
+            max-width: 80%;
+            margin-bottom: 30px;
+        }
+        #rules-overlay ul li {
+            margin-bottom: 10px;
+        }
+        #rules-overlay .close-btn {
+            background-color: #f44336; /* Red close button */
+            margin-top: 20px;
+        }
+        #rules-overlay .close-btn:hover {
+            background-color: #d32f2f;
+        }
+
 
         /* Responsiveness */
         @media (max-width: 768px) {
@@ -302,6 +351,18 @@
             }
             #pause-overlay p {
                 font-size: 2rem;
+            }
+            #rules-btn {
+                font-size: 2rem;
+                top: 15px;
+                right: 15px;
+            }
+            #rules-overlay h2 {
+                font-size: 2rem;
+            }
+            #rules-overlay ul {
+                font-size: 1rem;
+                margin-left: 15px;
             }
         }
 
@@ -342,6 +403,18 @@
             #pause-overlay p {
                 font-size: 1.5rem;
             }
+            #rules-btn {
+                font-size: 1.8rem;
+                top: 10px;
+                right: 10px;
+            }
+            #rules-overlay h2 {
+                font-size: 1.8rem;
+            }
+            #rules-overlay ul {
+                font-size: 0.9rem;
+                margin-left: 10px;
+            }
         }
     </style>
 </head>
@@ -349,7 +422,7 @@
 
     <div class="game-container">
         <div id="opening-screen" class="overlay-screen active">
-            <h2>Whack-a-Mole Pro!</h2>
+            <h2>Mole Mania!</h2>
             <p>
                 Ayo pukul mole-mole nakal dan hindari bom! <br>
                 Pukul mole emas untuk skor ekstra!
@@ -363,6 +436,24 @@
             <button id="mute-btn-opening" class="btn mt-4">
                 <i class="fas fa-volume-up"></i> Suara
             </button>
+            <button id="rules-btn">
+                <i class="fas fa-question-circle"></i>
+            </button>
+        </div>
+
+        <div id="rules-overlay" class="overlay-screen">
+            <h2>Peraturan Permainan</h2>
+            <ul>
+                <li>Pukul **Mole Biasa (🐭)** untuk mendapatkan **+1** poin.</li>
+                <li>Pukul **Mole Emas (🌟)** untuk mendapatkan **+5** poin.</li>
+                <li>Pukul **Mole Kotor (💩)** akan mengurangi **-3** poin Anda.</li>
+                <li>Hati-hati! Jika Anda memukul **BOM (💣)**, permainan akan langsung berakhir.</li>
+                <li>Selesaikan permainan sebelum waktu habis untuk mendapatkan skor tertinggi.</li>
+                <li>Skor tertinggi Anda akan disimpan dan ditampilkan di layar pembuka.</li>
+                <li>Gunakan tombol **JEDA** untuk menghentikan sementara permainan.</li>
+                <li>Anda bisa menonaktifkan/mengaktifkan suara menggunakan tombol speaker.</li>
+            </ul>
+            <button id="close-rules-btn" class="btn close-btn">Tutup</button>
         </div>
 
         <div id="countdown-overlay" class="overlay-screen">
@@ -376,7 +467,7 @@
         </div>
 
 
-        <h1 class="text-white text-4xl font-bold mb-4 drop-shadow-lg">WHACK-A-MOLE PRO!</h1>
+        <h1 class="text-white text-4xl font-bold mb-4 drop-shadow-lg">MOLE MANIA!</h1>
         <div class="scoreboard-timer">
             <div id="score">Skor: 0</div>
             <div id="time-left">Waktu: 30s</div>
@@ -411,14 +502,17 @@
         const countdownNumber = document.getElementById('countdown-number');
         const gameOverScreen = document.getElementById('game-over-screen');
         const pauseOverlay = document.getElementById('pause-overlay');
+        const rulesOverlay = document.getElementById('rules-overlay'); // New: Rules overlay
+        const rulesBtn = document.getElementById('rules-btn'); // New: Rules button
+        const closeRulesBtn = document.getElementById('close-rules-btn'); // New: Close rules button
 
         const difficultyBtns = document.querySelectorAll('.difficulty-options .btn');
         const playAgainBtn = document.getElementById('play-again-btn');
         const resumeBtn = document.getElementById('resume-btn');
         const quitBtnPause = document.getElementById('quit-btn-pause');
         const pauseBtn = document.getElementById('pause-btn');
-        const muteBtn = document.getElementById('mute-btn'); // New mute button in game
-        const muteBtnOpening = document.getElementById('mute-btn-opening'); // New mute button in opening screen
+        const muteBtn = document.getElementById('mute-btn');
+        const muteBtnOpening = document.getElementById('mute-btn-opening');
 
         const finalMessageDisplay = document.getElementById('final-message');
         const finalScoreDisplay = document.getElementById('final-score');
@@ -434,38 +528,38 @@
         const gamestartSound = document.getElementById('gamestart-sound');
         const countdownBeep = document.getElementById('countdown-beep');
         const backgroundMusic = document.getElementById('background-music');
-        const allAudioElements = document.querySelectorAll('audio'); // Get all audio elements
+        const allAudioElements = document.querySelectorAll('audio');
 
         // Game Variables
         let score = 0;
-        let timeLeft = 30; // Default time
+        let timeLeft = 30;
         let gameInterval;
         let moleInterval;
         let lastHole;
         let isGameActive = false;
         let isPaused = false;
-        let currentDifficulty = 'medium'; // Default difficulty
-        let isMuted = localStorage.getItem('isMuted') === 'true'; // Load mute state from localStorage
+        let currentDifficulty = 'medium';
+        let isMuted = localStorage.getItem('isMuted') === 'true';
 
         // Difficulty Settings
         const difficulties = {
             easy: {
                 time: 45,
-                molePopSpeed: 900, // lower means faster
-                bombChance: 0.05, // 5% chance
-                moleTypes: ['mole', 'mole', 'mole', 'golden-mole'] // More common moles
+                molePopSpeed: 900,
+                bombChance: 0.05,
+                moleTypes: ['mole', 'mole', 'mole', 'golden-mole']
             },
             medium: {
                 time: 30,
                 molePopSpeed: 800,
-                bombChance: 0.15, // 15% chance
+                bombChance: 0.15,
                 moleTypes: ['mole', 'mole', 'mole', 'mole', 'golden-mole', 'bad-mole']
             },
             hard: {
                 time: 20,
                 molePopSpeed: 600,
-                bombChance: 0.25, // 25% chance
-                moleTypes: ['mole', 'mole', 'golden-mole', 'bad-mole', 'bad-mole'] // More bad moles
+                bombChance: 0.25,
+                moleTypes: ['mole', 'mole', 'golden-mole', 'bad-mole', 'bad-mole']
             }
         };
 
@@ -482,8 +576,8 @@
 
             const mole = document.createElement('div');
             mole.classList.add('mole');
-            mole.innerHTML = '🐭'; // Default emoji
-            mole.dataset.type = 'mole'; // Default type
+            mole.innerHTML = '🐭';
+            mole.dataset.type = 'mole';
             hole.appendChild(mole);
             gameGrid.appendChild(hole);
         }
@@ -491,36 +585,31 @@
         const moles = document.querySelectorAll('.mole');
         const holes = document.querySelectorAll('.hole');
 
-        // Play sound function (handles cases where sound might not play immediately)
         function playSound(audioElement) {
-            if (audioElement && !isMuted) { // Only play if not muted
-                audioElement.currentTime = 0; // Rewind to start
-                audioElement.play().catch(e => console.log("Audio play failed:", e)); // Catch and log errors
+            if (audioElement && !isMuted) {
+                audioElement.currentTime = 0;
+                audioElement.play().catch(e => console.log("Audio play failed:", e));
             }
         }
 
-        // Toggle mute function
         function toggleMute() {
             isMuted = !isMuted;
-            localStorage.setItem('isMuted', isMuted); // Save state
+            localStorage.setItem('isMuted', isMuted);
 
             allAudioElements.forEach(audio => {
                 audio.muted = isMuted;
             });
 
-            // Update button icons
             const iconClass = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
             muteBtn.innerHTML = `<i class="${iconClass}"></i>`;
             muteBtnOpening.innerHTML = `<i class="${iconClass}"></i> Suara`;
 
-            // If background music was playing and now unmuted, resume it
             if (!isMuted && isGameActive && !isPaused) {
                 backgroundMusic.play().catch(e => console.log("Background music resume failed:", e));
             } else if (isMuted) {
                 backgroundMusic.pause();
             }
         }
-
 
         function randomHole() {
             const index = Math.floor(Math.random() * holes.length);
@@ -535,8 +624,8 @@
         function popUpMole() {
             moles.forEach(mole => {
                 mole.classList.remove('up', 'hit');
-                mole.innerHTML = ''; // Clear content before setting new
-                mole.dataset.type = ''; // Clear type before setting new
+                mole.innerHTML = '';
+                mole.dataset.type = '';
             });
 
             const randomHoleElement = randomHole();
@@ -544,7 +633,6 @@
 
             const difficultySettings = difficulties[currentDifficulty];
             const isBombChance = Math.random();
-            // const moleTypeChance = Math.random(); // This variable is not used
 
             if (isBombChance < difficultySettings.bombChance) {
                 moleElement.innerHTML = '💣';
@@ -558,14 +646,13 @@
                 } else if (type === 'golden-mole') {
                     moleElement.innerHTML = '🌟';
                 } else if (type === 'bad-mole') {
-                    moleElement.innerHTML = '💩'; // You can change this emoji
+                    moleElement.innerHTML = '💩';
                 }
                 moleElement.dataset.type = type;
             }
 
             moleElement.classList.add('up');
-            // Remove 'up' class after a random time, but only if not paused
-            const time = Math.random() * 1000 + 500; // Mole stays up for 0.5s to 1.5s
+            const time = Math.random() * 1000 + 500;
             setTimeout(() => {
                 if (!isPaused) {
                    moleElement.classList.remove('up');
@@ -590,7 +677,7 @@
                 } else {
                     clearInterval(countdownTimer);
                     countdownOverlay.classList.remove('active');
-                    startGameExecution(); // Start the actual game after countdown
+                    startGameExecution();
                 }
             }, 1000);
         }
@@ -602,11 +689,11 @@
             timeLeftDisplay.textContent = `Waktu: ${timeLeft}s`;
             isGameActive = true;
             isPaused = false;
-            pauseBtn.classList.remove('hidden'); // Show pause button
-            muteBtn.classList.remove('hidden'); // Show mute button in game
+            pauseBtn.classList.remove('hidden');
+            muteBtn.classList.remove('hidden');
 
-            backgroundMusic.volume = 0.5; // Set volume for background music
-            if (!isMuted) { // Only play if not muted
+            backgroundMusic.volume = 0.5;
+            if (!isMuted) {
                 backgroundMusic.play().catch(e => console.log("Background music play failed:", e));
             }
 
@@ -628,11 +715,10 @@
             clearInterval(gameInterval);
             clearInterval(moleInterval);
             isGameActive = false;
-            isPaused = false; // Ensure game is not paused when it ends
+            isPaused = false;
             backgroundMusic.pause();
-            backgroundMusic.currentTime = 0; // Reset background music
+            backgroundMusic.currentTime = 0;
 
-            // Hide all moles and reset
             moles.forEach(mole => {
                 mole.classList.remove('up', 'hit');
                 mole.innerHTML = '🐭';
@@ -641,7 +727,6 @@
 
             finalScoreDisplay.textContent = score;
 
-            // Update high score
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('whackAMoleHighScore', highScore);
@@ -651,8 +736,8 @@
 
             gameOverScreen.classList.add('active');
             playSound(gameoverSound);
-            pauseBtn.classList.add('hidden'); // Hide pause button
-            muteBtn.classList.add('hidden'); // Hide mute button in game
+            pauseBtn.classList.add('hidden');
+            muteBtn.classList.add('hidden');
         }
 
         function pauseGame() {
@@ -662,7 +747,7 @@
             clearInterval(gameInterval);
             clearInterval(moleInterval);
             pauseOverlay.classList.add('active');
-            backgroundMusic.pause(); // Pause background music
+            backgroundMusic.pause();
         }
 
         function resumeGame() {
@@ -671,16 +756,14 @@
             isPaused = false;
             pauseOverlay.classList.remove('active');
             
-            // Re-start game timers if the game is active
             moleInterval = setInterval(popUpMole, difficulties[currentDifficulty].molePopSpeed);
             gameInterval = setInterval(countdown, 1000);
-            if (!isMuted) { // Resume background music only if not muted
+            if (!isMuted) {
                 backgroundMusic.play().catch(e => console.log("Background music resume failed:", e));
             }
         }
 
         function quitGame() {
-            // This function is for quitting from pause screen
             clearInterval(gameInterval);
             clearInterval(moleInterval);
             isGameActive = false;
@@ -689,25 +772,23 @@
             backgroundMusic.currentTime = 0;
 
             pauseOverlay.classList.remove('active');
-            gameOverScreen.classList.remove('active'); // Ensure game over is hidden
-            openingScreen.classList.add('active'); // Go back to opening screen
-            finalMessageDisplay.textContent = ''; // Clear message for next game
-            finalScoreDisplay.textContent = '0'; // Reset score display
-            scoreDisplay.textContent = `Skor: 0`; // Reset current game score
-            timeLeftDisplay.textContent = `Waktu: ${difficulties[currentDifficulty].time}s`; // Reset time display
-            pauseBtn.classList.add('hidden'); // Hide pause button
-            muteBtn.classList.add('hidden'); // Hide mute button in game
+            gameOverScreen.classList.remove('active');
+            openingScreen.classList.add('active');
+            finalMessageDisplay.textContent = '';
+            finalScoreDisplay.textContent = '0';
+            scoreDisplay.textContent = `Skor: 0`;
+            timeLeftDisplay.textContent = `Waktu: ${difficulties[currentDifficulty].time}s`;
+            pauseBtn.classList.add('hidden');
+            muteBtn.classList.add('hidden');
         }
 
-
-        // Function to create visual hit feedback
         function createHitFeedback(holeElement, points) {
             const feedback = document.createElement('div');
             feedback.classList.add('mole-hit-effect');
             feedback.textContent = `+${points}`;
             if (points < 0) feedback.textContent = `${points}`;
-            feedback.style.color = points > 0 ? 'lime' : 'red'; // Green for positive, red for negative
-            feedback.style.fontSize = points >= 5 ? '2.5rem' : '2rem'; // Larger for golden mole
+            feedback.style.color = points > 0 ? 'lime' : 'red';
+            feedback.style.fontSize = points >= 5 ? '2.5rem' : '2rem';
             holeElement.appendChild(feedback);
 
             feedback.addEventListener('animationend', () => {
@@ -715,7 +796,6 @@
             });
         }
 
-        // Event handler for whacking
         function whackMole(event) {
             const clickedElement = event.target;
 
@@ -741,10 +821,9 @@
 
             score += points;
             scoreDisplay.textContent = `Skor: ${score}`;
-            playSound(whackSound); // Play whack sound here
+            playSound(whackSound);
 
-            // Visual feedback for points
-            createHitFeedback(clickedElement.parentElement, points); // Pass the parent hole
+            createHitFeedback(clickedElement.parentElement, points);
 
             clickedElement.classList.remove('up');
             clickedElement.classList.add('hit');
@@ -758,13 +837,13 @@
             btn.addEventListener('click', (event) => {
                 currentDifficulty = event.target.dataset.difficulty;
                 openingScreen.classList.remove('active');
-                startCountdown(); // Start countdown before game
+                startCountdown();
             });
         });
 
         playAgainBtn.addEventListener('click', () => {
             gameOverScreen.classList.remove('active');
-            openingScreen.classList.add('active'); // Go back to opening screen
+            openingScreen.classList.add('active');
             finalMessageDisplay.textContent = '';
             finalScoreDisplay.textContent = '0';
             scoreDisplay.textContent = `Skor: 0`;
@@ -777,20 +856,33 @@
 
         gameGrid.addEventListener('click', whackMole);
 
-        muteBtn.addEventListener('click', toggleMute); // Attach toggleMute to game mute button
-        muteBtnOpening.addEventListener('click', toggleMute); // Attach toggleMute to opening screen mute button
+        muteBtn.addEventListener('click', toggleMute);
+        muteBtnOpening.addEventListener('click', toggleMute);
+
+        // New: Rules button event listeners
+        rulesBtn.addEventListener('click', () => {
+            rulesOverlay.classList.add('active');
+            openingScreen.classList.remove('active'); // Hide opening screen
+        });
+
+        closeRulesBtn.addEventListener('click', () => {
+            rulesOverlay.classList.remove('active');
+            openingScreen.classList.add('active'); // Show opening screen again
+        });
 
 
         // Initial state
         window.onload = () => {
             openingScreen.classList.add('active');
-            pauseBtn.classList.add('hidden'); // Hide pause button initially
-            muteBtn.classList.add('hidden'); // Hide mute button in game initially
+            pauseBtn.classList.add('hidden');
+            muteBtn.classList.add('hidden');
 
-            // Apply initial mute state
-            toggleMute(); // Call once to set initial state and update icons
-            isMuted = !isMuted; // Invert it because toggleMute flips it, and we want to apply the localStorage value
-            toggleMute(); // Call again to apply the correct state from localStorage
+            // Apply initial mute state from localStorage
+            // This ensures the correct icon and mute state are applied on page load.
+            // We call toggleMute() once, but first set isMuted to the opposite of what localStorage says,
+            // so the first call flips it to the correct stored state.
+            isMuted = !isMuted; // Temporarily invert to make toggleMute() apply the correct stored state
+            toggleMute();
         };
     </script>
 </body>
